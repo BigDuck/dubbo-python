@@ -17,7 +17,7 @@
 """
 import pstats
 
-from pyjsonrpc import HttpClient
+import pyjsonrpc
 
 from dubbo_client import ZookeeperRegistry, DubboClient
 
@@ -27,7 +27,7 @@ number = 1000
 
 def test_client_every_new():
     for x in range(number):
-        user_provider = HttpClient(url="http://{0}{1}".format('172.19.3.111:38080/', 'com.ofpay.demo.api.UserProvider'))
+        user_provider = pyjsonrpc.HttpClient(url="http://{0}{1}".format('172.19.3.111:38080/', 'com.ofpay.demo.api.UserProvider'))
         user_provider.getUser('A003')
         user_provider.queryUser(
             {u'age': 18, u'time': 1428463514153, u'sex': u'MAN', u'id': u'A003', u'name': u'zhangsan'})
@@ -37,7 +37,7 @@ def test_client_every_new():
 
 
 def test_client():
-    user_provider = HttpClient(url="http://{0}{1}".format('172.19.3.111:38080/', 'com.ofpay.demo.api.UserProvider'))
+    user_provider = pyjsonrpc.HttpClient(url="http://{0}{1}".format('172.19.3.111:38080/', 'com.ofpay.demo.api.UserProvider'))
     for x in range(number):
         user_provider.getUser('A003')
         user_provider.queryUser(

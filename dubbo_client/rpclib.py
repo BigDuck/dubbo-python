@@ -17,12 +17,10 @@
 """
 
 
-from urllib2 import HTTPError
-
-from pyjsonrpc import HttpClient, JsonRpcError
+import pyjsonrpc
 
 from dubbo_client.registry import Registry
-from dubbo_client.rpcerror import ConnectionFail, dubbo_client_errors, InternalError, DubboClientError
+from dubbo_client.rpcerror import dubbo_client_errors, InternalError, DubboClientError
 
 
 
@@ -52,17 +50,15 @@ class DubboClient(object):
     def call(self, method, *args, **kwargs):
         provider = self.registry.get_random_provider(self.interface, version=self.version, group=self.group)
         # print service_url.location
-        client = HttpClient(url="http://{0}{1}".format(provider.location, provider.path))
+        client = pyjsonrpc.HttpClient(url="http://{0}{1}".format(provider.location, provider.path))
         try:
             return client.call(method, *args, **kwargs)
-        except HTTPError, e:
-            raise ConnectionFail(None, e.filename)
-        except JsonRpcError, error:
+        except pyjsonrpc.JsonRpcError as error:
             if error.code in dubbo_client_errors:
                 raise dubbo_client_errors[error.code](message=error.message, data=error.data)
             else:
                 raise DubboClientError(code=error.code, message=error.message, data=error.data)
-        except Exception, ue:
+        except Exception as ue:
             if hasattr(ue, 'reason'):
                 raise InternalError(ue.message, ue.reason)
             else:

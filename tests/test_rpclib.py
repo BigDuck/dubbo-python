@@ -30,7 +30,7 @@ if __name__ == '__main__':
     user_provider = DubboClient(service_interface, registry, version='2.0')
     for i in range(1000):
         try:
-            print user_provider.getUser('A003')
+            print(user_provider.getUser('A003'))
             # print user_provider.getUser(123)
             # print user_provider.queryUser(
             #     {u'age': 18, u'time': 1428463514153, u'sex': u'MAN', u'id': u'A003', u'name': u'zhangsan'})
@@ -41,7 +41,7 @@ if __name__ == '__main__':
             # print user_provider('getUser', 'A005')
             # print user_provider.notFunc()
             # print user_provider.gotException()
-        except DubboClientError, client_error:
-            print client_error.message
-            print client_error.data
+        except DubboClientError as client_error:
+            print(client_error.message)
+            print(client_error.data)
         time.sleep(5)

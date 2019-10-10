@@ -29,10 +29,10 @@ if __name__ == '__main__':
     user_provider = DubboClient(service_interface, registry, version='1.0')
     for i in range(1000):
         try:
-            print user_provider.findAddressByCustomerId(1)
+            print (user_provider.findAddressByCustomerId(1))
             # print user_provider.save(1, 3)
 
-        except DubboClientError, client_error:
-            print client_error.message
-            print client_error.data
+        except DubboClientError as client_error:
+            print (client_error.message)
+            print (client_error.data)
         time.sleep(5)

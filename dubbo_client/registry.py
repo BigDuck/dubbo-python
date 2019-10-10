@@ -295,7 +295,7 @@ class ZookeeperRegistry(Registry):
             self._compare_swap_nodes(provide_name, self.__unquote(children))
             configurators_nodes = self._get_provider_configuration(provide_name)
             self._set_provider_configuration(provide_name, configurators_nodes)
-        print self._service_providers
+        print(self._service_providers)
 
     def _do_config_event(self, event):
         """
@@ -308,7 +308,7 @@ class ZookeeperRegistry(Registry):
         configurators_nodes = self._get_provider_configuration(provide_name)
         self._set_provider_configuration(provide_name, configurators_nodes)
 
-        print self._service_providers
+        print(self._service_providers)
 
     def register(self, interface, **kwargs):
         ip = self.__zk._connection._socket.getsockname()[0]
@@ -382,7 +382,7 @@ class MulticastRegistry(Registry):
         def run(self):
             while True:
                 event = self.sock.recv(10240)
-                print event
+                print(event)
                 self.callback(event.rstrip())
 
         def set_mssage(self, msg):
@@ -416,21 +416,21 @@ if __name__ == '__main__':
     nodes = zk.get_children(parent_node)
     for child_node in nodes:
         node = urllib.unquote(child_node).decode('utf8')
-        print node
+        print (node)
     configurators_node = '{0}/{1}/{2}'.format('dubbo', 'com.ofpay.demo.api.UserProvider', 'configurators')
     nodes = zk.get_children(configurators_node)
     for child_node in nodes:
         node = urllib.unquote(child_node).decode('utf8')
-        print node
+        print(node)
     providers_node = '{0}/{1}/{2}'.format('dubbo', 'com.ofpay.demo.api.UserProvider', 'providers')
     nodes = zk.get_children(providers_node)
     for child_node in nodes:
         node = urllib.unquote(child_node).decode('utf8')
-        print node
+        print (node)
     # zk.delete(parent_node+'/'+child_node, recursive=True)
     # registry = MulticastRegistry('224.5.6.7:1234')
     registry = ZookeeperRegistry('zookeeper:2181')
     registry.subscribe('com.ofpay.demo.api.UserProvider')
-    print registry.get_providers('com.ofpay.demo.api.UserProvider')
+    print(registry.get_providers('com.ofpay.demo.api.UserProvider'))
 
     time.sleep(500)

@@ -16,7 +16,7 @@
 
 """
 
-from urlparse import urlparse, parse_qsl
+from urllib.parse import urlparse, parse_qsl
 
 
 class ServiceURL(object):

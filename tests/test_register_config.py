@@ -30,9 +30,9 @@ def test_config_init():
     user_provider = DubboClient(service_interface, registry, version='1.0.0')
     for i in range(10000):
         try:
-            print user_provider.findOne()
-        except DubboClientError, client_error:
-            print client_error
+            print(user_provider.findOne())
+        except DubboClientError as client_error:
+            print(client_error)
         time.sleep(1)
 
 if __name__ == '__main__':
