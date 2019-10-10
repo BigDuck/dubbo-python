@@ -26,8 +26,8 @@ import socket
 import struct
 import threading
 import time
-import urllib
 from threading import Thread
+from urllib.parse import quote, unquote, urlencode
 
 from kazoo.client import KazooClient
 from kazoo.protocol.states import KazooState
@@ -35,7 +35,6 @@ from kazoo.protocol.states import KazooState
 from dubbo_client.common import ServiceURL
 from dubbo_client.config import ApplicationConfig
 from dubbo_client.rpcerror import NoProvider
-
 
 # 创建一个logger
 if os.path.exists('logging.conf'):
@@ -117,7 +116,7 @@ class Registry(object):
         version = kwargs.get('version', '')
         key = self._to_key(interface, version, group)
         second_dict = self._service_providers.get(interface, {})
-        service_url_list = [service_url for service_url in second_dict.get(key, {}).itervalues() if
+        service_url_list = [service_url for service_url in second_dict.get(key, {}).values() if
                             not service_url.disabled and service_url.weight > 0]
         if not service_url_list:
             raise NoProvider('can not find provider', interface)
@@ -164,7 +163,8 @@ class Registry(object):
         :param group:  分组 product
         :return: key 字符串
         """
-        return '{0}|{1}|{2}'.format(interface, version, group)
+        # return '{0}|{1}|{2}'.format(interface, version, group)
+        return '{0}/{1}:{2}'.format(group, interface, version)
 
     def _add_node(self, interface, service_url):
         key = self._to_key(service_url.interface, service_url.version, service_url.group)
@@ -208,13 +208,14 @@ class Registry(object):
                     del self._service_providers[interface]
                     logger.debug("delete node {0}".format(interface))
                 for child_node in nodes:
-                    node = urllib.unquote(child_node).decode('utf8')
+                    node = unquote(child_node).encode('utf-8').decode('unicode_escape')
                     logger.debug('child of node is {0}'.format(node))
-                    if node.startswith('jsonrpc'):
+                    if node.startswith('dubbo'):
                         service_url = ServiceURL(node)
                         self._add_node(interface, service_url)
             except Exception as e:
                 logger.warn('swap json-rpc provider error %s', str(e))
+                raise e
             finally:
                 self._mutex.release()
 
@@ -230,7 +231,7 @@ class Registry(object):
         try:
             configuration_dict = {}
             for _child_node in nodes:
-                _node = urllib.unquote(_child_node).decode('utf8')
+                _node = unquote(_child_node).encode('utf-8').decode('unicode_escape')
                 if _node.startswith('override'):
                     service_url = ServiceURL(_node)
                     key = self._to_key(interface, service_url.version, service_url.group)
@@ -281,7 +282,7 @@ class ZookeeperRegistry(Registry):
             self._connect_state = state
 
     def __unquote(self, origin_nodes):
-        return (urllib.unquote(child_node).decode('utf8') for child_node in origin_nodes if child_node)
+        return (unquote(child_node).encode('utf-8').decode('unicode_escape') for child_node in origin_nodes if child_node)
 
     def _do_event(self, event):
         # event.path 是类似/dubbo/com.ofpay.demo.api.UserProvider/providers 这样的
@@ -325,12 +326,12 @@ class ZookeeperRegistry(Registry):
             'pid': os.getpid(),
             'version': '1.0'
         }
-        url = 'consumer://{0}/{1}?{2}'.format(ip, interface, urllib.urlencode(params))
+        url = 'consumer://{0}/{1}?{2}'.format(ip, interface, urlencode(params))
         # print urllib.quote(url, safe='')
 
         consumer_path = '{0}/{1}/{2}'.format('dubbo', interface, 'consumers')
         self.__zk.ensure_path(consumer_path)
-        self.__zk.create(consumer_path + '/' + urllib.quote(url, safe=''), ephemeral=True)
+        self.__zk.create(consumer_path + '/' + quote(url, safe=''), ephemeral=True)
 
     def subscribe(self, interface, **kwargs):
         """
@@ -340,8 +341,8 @@ class ZookeeperRegistry(Registry):
         """
         version = kwargs.get('version', '')
         group = kwargs.get('group', '')
-        providers_children = self.__zk.get_children('{0}/{1}/{2}'.format('dubbo', interface, 'providers'),
-                                                    watch=self.event_listener)
+        providers_children = self.__zk.get_children('{0}/{1}/{2}'.format('dubbo', interface, 'providers'),watch=self.event_listener)
+        print("提供者数",len(providers_children))
         logger.debug("watch node is {0}".format(providers_children))
         self.__zk.get_children('{0}/{1}/{2}'.format('dubbo', interface, 'configurators'),
                                watch=self.configuration_listener)
@@ -410,22 +411,22 @@ class MulticastRegistry(Registry):
 
 
 if __name__ == '__main__':
-    zk = KazooClient(hosts='192.168.59.103:2181')
+    zk = KazooClient(hosts='10.188.181.146:2181')
     zk.start()
     parent_node = '{0}/{1}/{2}'.format('dubbo', 'com.ofpay.demo.api.UserProvider', '')
     nodes = zk.get_children(parent_node)
     for child_node in nodes:
-        node = urllib.unquote(child_node).decode('utf8')
+        node = unquote(child_node).encode('utf-8').decode('unicode_escape')
         print (node)
     configurators_node = '{0}/{1}/{2}'.format('dubbo', 'com.ofpay.demo.api.UserProvider', 'configurators')
     nodes = zk.get_children(configurators_node)
     for child_node in nodes:
-        node = urllib.unquote(child_node).decode('utf8')
+        node = unquote(child_node).encode('utf-8').decode('unicode_escape')
         print(node)
     providers_node = '{0}/{1}/{2}'.format('dubbo', 'com.ofpay.demo.api.UserProvider', 'providers')
     nodes = zk.get_children(providers_node)
     for child_node in nodes:
-        node = urllib.unquote(child_node).decode('utf8')
+        node = unquote(child_node).encode('utf-8').decode('unicode_escape')
         print (node)
     # zk.delete(parent_node+'/'+child_node, recursive=True)
     # registry = MulticastRegistry('224.5.6.7:1234')

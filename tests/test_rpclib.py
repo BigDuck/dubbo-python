@@ -17,20 +17,26 @@
 """
 import time
 
+from kazoo.client import KazooClient
+
 from dubbo_client import ZookeeperRegistry, DubboClient, DubboClientError, ApplicationConfig
 
 __author__ = 'caozupeng'
 
-if __name__ == '__main__':
+
+def my_zk():
     config = ApplicationConfig('test_rpclib')
-    service_interface = 'com.ofpay.demo.api.UserProvider'
+    service_interface = 'com.yytcloud.platform.service.api.IApplicationQueryService'
     # 该对象较重，有zookeeper的连接，需要保存使用
-    registry = ZookeeperRegistry('115.28.74.185:2181', config)
+    registry = ZookeeperRegistry('10.188.181.146:2181', config)
     # registry = MulticastRegistry('224.5.6.7:1234', config)
-    user_provider = DubboClient(service_interface, registry, version='2.0')
+    user_provider = DubboClient(service_interface, registry, version='1.0.0',group='usertest_yytcloud_default')
     for i in range(1000):
         try:
-            print(user_provider.getUser('A003'))
+            pk=user_provider.call("queryAllApplication")
+            # pk = user_provider.queryCorpList()
+            print(pk)
+            # print(user_provider.getUserByCode('wuzq'))
             # print user_provider.getUser(123)
             # print user_provider.queryUser(
             #     {u'age': 18, u'time': 1428463514153, u'sex': u'MAN', u'id': u'A003', u'name': u'zhangsan'})
@@ -45,3 +51,11 @@ if __name__ == '__main__':
             print(client_error.message)
             print(client_error.data)
         time.sleep(5)
+def ka_client():
+    zk = KazooClient(hosts='10.188.181.146:2181')
+    zk.start()
+    parent_node = '{0}/{1}/{2}'.format('dubbo', 'com.yytcloud.platform.service.api.IApplicationQueryService', '')
+    nodes = zk.get_children(parent_node)
+    print(len(nodes))
+if __name__ == '__main__':
+    my_zk()

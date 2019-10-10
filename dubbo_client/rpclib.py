@@ -18,6 +18,7 @@
 
 
 import pyjsonrpc
+from pyjsonrpc.http import HttpClient
 
 from dubbo_client.registry import Registry
 from dubbo_client.rpcerror import dubbo_client_errors, InternalError, DubboClientError
@@ -39,7 +40,7 @@ class DubboClient(object):
             return self.client_instance.call(self.method, *args, **kwargs)
 
     def __init__(self, interface, registry, **kwargs):
-        assert isinstance(registry, Registry)
+
         self.interface = interface
         self.registry = registry
         self.group = kwargs.get('group', '')
@@ -50,7 +51,8 @@ class DubboClient(object):
     def call(self, method, *args, **kwargs):
         provider = self.registry.get_random_provider(self.interface, version=self.version, group=self.group)
         # print service_url.location
-        client = pyjsonrpc.HttpClient(url="http://{0}{1}".format(provider.location, provider.path))
+        client = HttpClient(url="http://{0}{1}".format(provider.location, provider.path))
+        print("---------------->",client)
         try:
             return client.call(method, *args, **kwargs)
         except pyjsonrpc.JsonRpcError as error:
